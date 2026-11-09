@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#173c32">
+<title>Green Table Cafe | Digital Menu</title>
+<!-- Supabase JS Client Library -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--green:#173c32;--green2:#245b49;--cream:#faf7ef;--gold:#d9a441;--ink:#202923;--muted:#748078;--white:#fff;--line:#e8e5dc;--red:#b94a48}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:11px 16px;font-weight:700}
+.top{background:var(--green);color:white;padding:16px 5%;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:5;box-shadow:0 3px 15px #0002}
+.brand{display:flex;align-items:center;gap:11px}.logo{width:42px;height:42px;border-radius:14px;background:var(--gold);display:grid;place-items:center;color:var(--green);font-size:23px}.brand h1{font-size:18px;margin:0}.brand small{display:block;color:#d5e2da;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;margin-top:3px}
+.nav{display:flex;gap:8px}.nav button{background:#ffffff1c;color:white;padding:9px 13px}.nav button.active{background:var(--gold);color:var(--green)}
+main{max-width:1180px;margin:auto;padding:28px 5% 60px}.hero{background:linear-gradient(115deg,#173c32,#2d6a52);color:white;border-radius:24px;padding:30px;display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:25px;overflow:hidden}.hero h2{font-size:clamp(25px,4vw,38px);line-height:1.12;margin:0 0 9px}.hero p{color:#d7e5dc;margin:0}.hero-mark{font-size:76px;opacity:.9}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:20px 0}.search{flex:1;min-width:190px;border:1px solid var(--line);background:white;border-radius:12px;padding:12px 15px;outline:none}.search:focus,input:focus,textarea:focus,select:focus{border-color:var(--green2);box-shadow:0 0 0 3px #245b4917;outline:none}
+.categories{display:flex;gap:8px;overflow:auto;padding:2px 0 12px;margin-bottom:12px}.chip{white-space:nowrap;background:white;border:1px solid var(--line);color:var(--green);padding:9px 15px;border-radius:30px}.chip.active{background:var(--green);color:white;border-color:var(--green)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:18px}.grid.list-view{grid-template-columns:1fr;gap:10px}.grid.list-view .food{display:flex;flex-direction:row;min-height:116px}.grid.list-view .food img{width:125px;height:116px;flex:0 0 125px}.grid.list-view .food .body{padding:12px 15px;min-width:0}.grid.list-view .food p{min-height:0}.grid.list-view .food-foot{margin-top:auto;padding-top:8px}.food{background:white;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 5px 18px #20332808;display:flex;flex-direction:column}.food img{width:100%;height:155px;object-fit:cover;background:#e9e6dc}.food .body{padding:15px;display:flex;flex-direction:column;flex:1}.food h3{margin:0 0 6px;font-size:17px}.food p{margin:0;color:var(--muted);font-size:13px;line-height:1.45;min-height:37px}.food-foot{display:flex;justify-content:space-between;align-items:center;margin-top:15px;gap:8px}.price{font-size:18px;font-weight:800;color:var(--green)}.unavailable{font-size:11px;color:var(--red);font-weight:700}.empty{padding:40px;text-align:center;color:var(--muted);background:white;border-radius:18px}
+.panel{background:white;border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:18px}.panel h2,.panel h3{margin-top:0;color:var(--green)}.admin-layout{display:grid;grid-template-columns:1fr 1.3fr;gap:18px}.field{display:flex;flex-direction:column;gap:6px;margin:11px 0}.field label{font-size:12px;font-weight:800;color:#526057}.field input,.field textarea,.field select{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;background:#fff}.field textarea{min-height:70px;resize:vertical}.primary{background:var(--green);color:white}.secondary{background:#edf2ed;color:var(--green)}.danger{background:#fff0ef;color:var(--red)}.gold{background:var(--gold);color:var(--green)}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.item-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.item-row img{width:54px;height:48px;object-fit:cover;border-radius:9px}.item-row .grow{flex:1;min-width:0}.item-row strong{display:block}.item-row small{color:var(--muted)}.item-row button{padding:8px 10px;font-size:12px}.hidden{display:none!important}.notice{padding:12px 14px;border-radius:12px;background:#fff5dc;color:#71551c;font-size:13px;line-height:1.5;margin-bottom:16px}.success{background:#eaf5ed;color:#235b37}.qr-wrap{text-align:center}.qr-wrap img{width:220px;height:220px;object-fit:contain;border:10px solid white;box-shadow:0 2px 16px #0001;border-radius:12px}.footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
+.modal-bg{position:fixed;inset:0;background:#0008;display:grid;place-items:center;padding:18px;z-index:10}.modal{background:white;border-radius:18px;padding:24px;width:min(420px,100%);box-shadow:0 20px 60px #0004}.modal h2{margin-top:0;color:var(--green)}.muted{color:var(--muted);font-size:13px}
+@media(max-width:720px){.grid.list-view{grid-template-columns:1fr}.grid.list-view .food{min-height:108px}.grid.list-view .food img{width:105px;height:108px;flex-basis:105px}.grid.list-view .food .body{padding:10px}.grid.list-view .food h3{font-size:14px}.grid.list-view .food p{font-size:11px}.grid.list-view .food-foot{margin-top:auto;padding-top:6px}.view-toggle button{padding:9px 11px;font-size:12px}.top{padding:12px 4%;align-items:flex-start}.brand h1{font-size:15px}.nav button{font-size:12px;padding:8px}.hero{padding:23px}.hero-mark{font-size:52px}.admin-layout{grid-template-columns:1fr}main{padding:20px 4% 45px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.food img{height:120px}.food .body{padding:11px}.food h3{font-size:15px}.food p{font-size:12px}.price{font-size:16px}}
+@media(max-width:380px){.grid{grid-template-columns:1fr}.nav{gap:4px}.nav button{padding:8px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="logo">☕</div><div><h1 id="brandName">Green Table Cafe</h1><small>Fresh • Local • Delicious</small></div></div>
+  <nav class="nav"><button id="menuTab" class="active" onclick="showPage('menu')">Menu</button><button id="adminTab" onclick="openAdmin()">Admin</button></nav>
+</header>
+<main>
+<section id="menuPage">
+  <div class="hero"><div><h2 id="heroTitle">Good food. Good mood.</h2><p id="heroSubtitle">Explore our menu and find your next favourite.</p></div><div class="hero-mark">🍽️</div></div>
+  <div class="toolbar"><input class="search" id="searchInput" placeholder="Search food or drinks..." oninput="renderMenu()"><div class="row view-toggle"><button id="gridViewBtn" class="secondary" onclick="setMenuView('grid')">Grid</button><button id="listViewBtn" class="secondary" onclick="setMenuView('list')">One row</button></div><span class="muted" id="itemCount"></span></div>
+  <div class="categories" id="categories"></div>
+  <div class="grid" id="foodGrid"></div>
+</section>
+<section id="adminPage" class="hidden">
+  <div class="row" style="justify-content:space-between;margin-bottom:15px"><div><h2 style="margin:0;color:var(--green)">Cafe Admin</h2><div class="muted">Manage your digital menu and QR code</div></div><button class="secondary hidden" id="logoutBtn" onclick="logout()">Log out</button></div>
+  <div id="loginPanel" class="panel" style="max-width:430px;margin:25px auto">
+    <h2>Admin sign in</h2><div class="field"><label>Username</label><input id="loginUser" autocomplete="username" value="admin"></div>
+    <div class="field"><label>Password</label><input id="loginPass" type="password" autocomplete="current-password" placeholder="Enter password"></div>
+    <button class="primary" style="width:100%" onclick="login()">Sign in</button><p class="muted">Default demo login: admin / cafe123. Change it after signing in.</p>
+    <div id="loginError" class="unavailable"></div>
+  </div>
+  <div id="adminContent" class="hidden">
+    <div class="notice">Connected to Supabase. Changes sync directly to your live database and are accessible across devices!</div>
+    <div class="admin-layout">
+      <div>
+        <div class="panel">
+          <h3 id="formTitle">Add menu item</h3>
+          <input type="hidden" id="editId">
+          <div class="field"><label>Food / drink name *</label><input id="foodName" placeholder="e.g. Macchiato"></div>
+          <div class="field"><label>Category *</label><select id="foodCategory"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Coffee</option><option>Drinks</option><option>Snacks</option><option>Desserts</option></select></div>
+          <div class="field"><label>Description</label><textarea id="foodDescription" placeholder="Short description..."></textarea></div>
+          <div class="field"><label>Price (ETB) *</label><input id="foodPrice" type="number" min="0" step="0.01" placeholder="e.g. 85"></div>
+          <div class="field"><label>Image URL (optional)</label><input id="foodImage" placeholder="https://..."></div>
+          <div class="field"><label>Or upload food image from your device</label><input id="foodImageFile" type="file" accept="image/*" onchange="previewFoodImage(event)"><small class="muted">Choose a photo from your phone or computer. Uploading a file takes priority over the image URL.</small><img id="foodImagePreview" class="hidden" alt="Selected food image preview" style="width:100%;max-height:170px;object-fit:cover;border-radius:12px;margin-top:8px"></div>
+          <div class="field"><label><input id="foodAvailable" type="checkbox" checked style="width:auto"> Available to order</label></div>
+          <div class="row"><button class="primary" onclick="saveFood()">Save item</button><button class="secondary" onclick="resetForm()">Clear</button></div>
+        </div>
+        <div class="panel">
+          <h3>Cafe settings</h3>
+          <div class="field"><label>Cafe name</label><input id="cafeNameInput"></div>
+          <div class="field"><label>Menu tagline</label><input id="taglineInput"></div>
+          <button class="primary" onclick="saveSettings()">Save cafe details</button>
+        </div>
+        <div class="panel">
+          <h3>Admin password</h3>
+          <div class="field"><label>Current password</label><input type="password" id="oldPassword"></div>
+          <div class="field"><label>New password</label><input type="password" id="newPassword"></div>
+          <button class="secondary" onclick="changePassword()">Update password</button>
+        </div>
+      </div>
+      <div>
+        <div class="panel"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Menu items</h3><span class="muted" id="adminCount"></span></div><div id="adminItems" style="margin-top:12px"></div></div>
+        <div class="panel qr-wrap"><h3>Customer QR code</h3><p class="muted">Customers scan this code with their phone camera to open the menu link.</p><div id="qrArea"><p class="muted">Save or host your website to generate a shareable QR code.</p></div><div class="row" style="justify-content:center;margin-top:15px"><button class="secondary" onclick="downloadQR()">Download QR</button><button class="secondary" onclick="copyMenuLink()">Copy menu link</button></div><p class="muted" id="menuUrl" style="overflow-wrap:anywhere"></p></div>
+        <div class="panel"><h3>Backup and restore</h3><p class="muted">Export your menu as a JSON backup or restore it later.</p><div class="row"><button class="secondary" onclick="exportData()">Export backup</button><label class="secondary" style="padding:11px 14px;border-radius:12px;font-weight:700;cursor:pointer">Import backup<input type="file" accept="application/json" onchange="importData(event)" hidden></label></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+<div class="footer">© <span id="year"></span> <span id="footerName">Green Table Cafe</span> · Digital Menu</div>
+<div id="loginModal" class="modal-bg hidden"><div class="modal"><h2>Admin access</h2><p class="muted">Sign in to manage the cafe menu.</p><button class="primary" style="width:100%" onclick="document.getElementById('loginModal').classList.add('hidden');showPage('admin')">Continue to sign in</button></div></div>
+<script>
+// --- SUPABASE CONFIGURATION ---
+const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const KEY='greenTableCafeSettings_v1';
+let foods = [];
+let settings = loadSettings();
+let password = localStorage.getItem('cafePassword') || 'cafe123';
+
+let activeCategory='All',loggedIn=false,qrImage='',menuView=localStorage.getItem('cafeMenuView')||'grid',selectedFoodImage='';
+
+function loadSettings(){
+  try{
+    return JSON.parse(localStorage.getItem(KEY)) || {name:'Green Table Cafe',tagline:'Explore our menu and find your next favourite.'};
+  }catch(e){
+    return {name:'Green Table Cafe',tagline:'Explore our menu and find your next favourite.'};
+  }
+}
+function persistSettings(){localStorage.setItem(KEY,JSON.stringify(settings))}
+
+// Fetch foods from Supabase on load
+async function fetchFoods() {
+  const { data, error } = await supabase.from('foods').select('*');
+  if (error) {
+    console.error('Error fetching foods from Supabase:', error);
+  } else {
+    foods = data || [];
+    renderMenu();
+    if(loggedIn) renderAdmin();
+  }
+}
+
+function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function showPage(p){document.getElementById('menuPage').classList.toggle('hidden',p!=='menu');document.getElementById('adminPage').classList.toggle('hidden',p!=='admin');document.getElementById('menuTab').classList.toggle('active',p==='menu');document.getElementById('adminTab').classList.toggle('active',p==='admin');if(p==='menu')renderMenu();if(p==='admin'&&loggedIn)renderAdmin()}
+function openAdmin(){showPage('admin');if(!loggedIn){document.getElementById('loginPanel').classList.remove('hidden');document.getElementById('adminContent').classList.add('hidden')}}
+function login(){if(document.getElementById('loginUser').value.trim()==='admin'&&document.getElementById('loginPass').value===password){loggedIn=true;document.getElementById('loginPanel').classList.add('hidden');document.getElementById('adminContent').classList.remove('hidden');document.getElementById('logoutBtn').classList.remove('hidden');document.getElementById('loginError').textContent='';renderAdmin()}else document.getElementById('loginError').textContent='Incorrect username or password.'}
+function logout(){loggedIn=false;document.getElementById('adminContent').classList.add('hidden');document.getElementById('loginPanel').classList.remove('hidden');document.getElementById('logoutBtn').classList.add('hidden');document.getElementById('loginPass').value=''}
+function setMenuView(view){menuView=view;localStorage.setItem('cafeMenuView',view);renderMenu()}
+function normalizeCategory(value){return String(value||'').trim().toLowerCase()}
+
+function renderMenu(){
+  const grid=document.getElementById('foodGrid');
+  grid.classList.toggle('list-view',menuView==='list');
+  document.getElementById('gridViewBtn').classList.toggle('primary',menuView==='grid');
+  document.getElementById('gridViewBtn').classList.toggle('secondary',menuView!=='grid');
+  document.getElementById('listViewBtn').classList.toggle('primary',menuView==='list');
+  document.getElementById('listViewBtn').classList.toggle('secondary',menuView!=='list');
+  const q=document.getElementById('searchInput').value.toLowerCase().trim();
+  const standardCats=['Coffee','Snacks','Lunch','Drinks','Breakfast','Dinner','Desserts'];
+  const usedCats=foods.map(x=>String(x.category||'').trim()).filter(Boolean);
+  const cats=['All',...new Set([...standardCats,...usedCats])];
+  document.getElementById('categories').innerHTML=cats.map(c=>`<button class="chip ${normalizeCategory(activeCategory)===normalizeCategory(c)?'active':''}" onclick="selectCategory(${JSON.stringify(c)})">${safe(c)}</button>`).join('');
+  const list=foods.filter(x=>{
+    const categoryMatches=normalizeCategory(activeCategory)==='all'||normalizeCategory(x.category)===normalizeCategory(activeCategory);
+    const searchMatches=`${x.name||''} ${x.description||''} ${x.category||''}`.toLowerCase().includes(q);
+    return categoryMatches&&searchMatches;
+  });
+  document.getElementById('itemCount').textContent=`${list.length} items`;
+  grid.innerHTML=list.length?list.map(x=>`<article class="food"><img src="${safe(x.image||'')}" alt="${safe(x.name)}" onerror="this.src='https://placehold.co/600x400/f0eee6/245b49?text=Food+Photo'"><div class="body"><h3>${safe(x.name)}</h3><p>${safe(x.description)}</p><div class="food-foot"><span class="price">${Number(x.price).toLocaleString()} ETB</span>${x.available?'<span class="muted">Available</span>':'<span class="unavailable">Unavailable</span>'}</div></div></article>`).join(''):'<div class="empty" style="grid-column:1/-1">No menu items found in this category.</div>';
+}
+function selectCategory(category){activeCategory=category;renderMenu()}
+function previewFoodImage(event){const file=event.target.files&&event.target.files[0];if(!file)return;if(!file.type.startsWith('image/')){alert('Please select an image file.');event.target.value='';return}const reader=new FileReader();reader.onload=()=>{selectedFoodImage=String(reader.result);const preview=document.getElementById('foodImagePreview');preview.src=selectedFoodImage;preview.classList.remove('hidden')};reader.readAsDataURL(file)}
+function resetForm(){['editId','foodName','foodDescription','foodPrice','foodImage'].forEach(id=>document.getElementById(id).value='');selectedFoodImage='';document.getElementById('foodImageFile').value='';document.getElementById('foodImagePreview').src='';document.getElementById('foodImagePreview').classList.add('hidden');document.getElementById('foodCategory').value='Breakfast';document.getElementById('foodAvailable').checked=true;document.getElementById('formTitle').textContent='Add menu item'}
+
+async function saveFood(){
+  const name = document.getElementById('foodName').value.trim();
+  const price = Number(document.getElementById('foodPrice').value);
+  if(!name || document.getElementById('foodPrice').value==='' || !Number.isFinite(price) || price<0){
+    alert('Please enter a food name and a valid price.');
+    return;
+  }
+  const editId = document.getElementById('editId').value;
+  const existingItem = foods.find(x => x.id == editId);
+  
+  const itemData = {
+    name,
+    category: document.getElementById('foodCategory').value.trim(),
+    description: document.getElementById('foodDescription').value.trim(),
+    price,
+    image: selectedFoodImage || document.getElementById('foodImage').value.trim() || (existingItem?.image || ''),
+    available: document.getElementById('foodAvailable').checked
+  };
+
+  if(editId){
+    // Update existing item in Supabase
+    const { error } = await supabase.from('foods').update(itemData).eq('id', editId);
+    if(error) { alert('Error updating item: ' + error.message); return; }
+  } else {
+    // Insert new item into Supabase
+    const { error } = await supabase.from('foods').insert([itemData]);
+    if(error) { alert('Error adding item: ' + error.message); return; }
+  }
+
+  resetForm();
+  await fetchFoods();
+  alert('Menu item saved successfully.');
+}
+
+function editFood(id){
+  const x=foods.find(x=>x.id==id);
+  if(!x)return;
+  document.getElementById('editId').value=x.id;
+  document.getElementById('foodName').value=x.name;
+  document.getElementById('foodCategory').value=x.category;
+  document.getElementById('foodDescription').value=x.description;
+  document.getElementById('foodPrice').value=x.price;
+  document.getElementById('foodImage').value=(x.image||'').startsWith('data:')?'':(x.image||'');
+  selectedFoodImage=(x.image||'').startsWith('data:')?x.image:'';
+  const preview=document.getElementById('foodImagePreview');
+  if(x.image){preview.src=x.image;preview.classList.remove('hidden')}else{preview.src='';preview.classList.add('hidden')}
+  document.getElementById('foodImageFile').value='';
+  document.getElementById('foodAvailable').checked=x.available;
+  document.getElementById('formTitle').textContent='Edit menu item';
+  document.getElementById('foodName').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+async function deleteFood(id){
+  if(confirm('Delete this menu item?')){
+    const { error } = await supabase.from('foods').delete().eq('id', id);
+    if(error){ alert('Error deleting item: ' + error.message); return; }
+    await fetchFoods();
+  }
+}
+
+function renderAdmin(){
+  document.getElementById('adminCount').textContent=foods.length+' items';
+  document.getElementById('adminItems').innerHTML=foods.length?foods.map(x=>`<div class="item-row"><img src="${safe(x.image||'https://placehold.co/100x100')}" onerror="this.src='https://placehold.co/100x100'"><div class="grow"><strong>${safe(x.name)}</strong><small>${safe(x.category)} · ${Number(x.price).toLocaleString()} ETB · ${x.available?'Available':'Unavailable'}</small></div><button class="secondary" onclick="editFood('${safe(x.id)}')">Edit</button><button class="danger" onclick="deleteFood('${safe(x.id)}')">Delete</button></div>`).join(''):'<p class="muted">No menu items yet. Add your first item.</p>';
+  document.getElementById('cafeNameInput').value=settings.name;
+  document.getElementById('taglineInput').value=settings.tagline;
+  makeQR();
+}
+
+function saveSettings(){
+  settings.name=document.getElementById('cafeNameInput').value.trim()||'My Cafe';
+  settings.tagline=document.getElementById('taglineInput').value.trim();
+  persistSettings();
+  updateBrand();
+  renderAdmin();
+  alert('Cafe details saved.');
+}
+
+function updateBrand(){
+  document.getElementById('brandName').textContent=settings.name;
+  document.getElementById('footerName').textContent=settings.name;
+  document.getElementById('heroSubtitle').textContent=settings.tagline;
+}
+
+function changePassword(){
+  if(document.getElementById('oldPassword').value!==password){alert('Current password is incorrect.');return}
+  const p=document.getElementById('newPassword').value;
+  if(p.length<6){alert('New password must be at least 6 characters.');return}
+  password=p;
+  localStorage.setItem('cafePassword', p);
+  document.getElementById('oldPassword').value='';
+  document.getElementById('newPassword').value='';
+  alert('Password updated successfully.');
+}
+
+function menuLink(){return location.href.split('#')[0]+'#menu'}
+function makeQR(){const url=menuLink();document.getElementById('menuUrl').textContent=url;if(!/^https?:/.test(url)){document.getElementById('qrArea').innerHTML='<p class="muted">Host this page on GitHub Pages or another website to create a shareable QR code.</p>';return}const src='https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(url);qrImage=src;document.getElementById('qrArea').innerHTML=`<img id="qrImage" src="${src}" alt="Cafe menu QR code">`}
+function downloadQR(){if(!qrImage){alert('Host this website online first to generate the QR code.');return}const a=document.createElement('a');a.href=qrImage;a.download='cafe-menu-qr.png';a.target='_blank';a.click()}
+async function copyMenuLink(){try{await navigator.clipboard.writeText(menuLink());alert('Menu link copied.')}catch(e){prompt('Copy your menu link:',menuLink())}}
+function exportData(){const blob=new Blob([JSON.stringify({foods, settings},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cafe-menu-backup.json';a.click();URL.revokeObjectURL(a.href)}
+
+async function importData(e){
+  const f=e.target.files[0];
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=async()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(!Array.isArray(d.foods)||!d.settings)throw Error();
+      settings = d.settings;
+      persistSettings();
+      // Optional: Bulk insert into Supabase if importing backup
+      for(let item of d.foods){
+        delete item.id; // Let Supabase handle IDs
+        await supabase.from('foods').insert([item]);
+      }
+      updateBrand();
+      await fetchFoods();
+      alert('Backup imported successfully to Supabase.');
+    }catch(err){alert('Invalid backup file.')}
+  };
+  r.readAsText(f);
+  e.target.value='';
+}
+
+document.getElementById('year').textContent=new Date().getFullYear();
+updateBrand();
+fetchFoods();
+if(location.hash==='#menu')showPage('menu');
+</script>
+</body>
+</html>
