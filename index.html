@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#173c32">
 <title>Green Table Cafe | Digital Menu</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--green:#173c32;--green2:#245b49;--cream:#faf7ef;--gold:#d9a441;--ink:#202923;--muted:#748078;--white:#fff;--line:#e8e5dc;--red:#b94a48}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
@@ -38,13 +39,13 @@ main{max-width:1180px;margin:auto;padding:28px 5% 60px}.hero{background:linear-g
 <section id="adminPage" class="hidden">
   <div class="row" style="justify-content:space-between;margin-bottom:15px"><div><h2 style="margin:0;color:var(--green)">Cafe Admin</h2><div class="muted">Manage your digital menu and QR code</div></div><button class="secondary hidden" id="logoutBtn" onclick="logout()">Log out</button></div>
   <div id="loginPanel" class="panel" style="max-width:430px;margin:25px auto">
-    <h2>Admin sign in</h2><div class="field"><label>Username</label><input id="loginUser" autocomplete="username" value="admin"></div>
-    <div class="field"><label>Password</label><input id="loginPass" type="password" autocomplete="current-password" placeholder="Enter password"></div>
-    <button class="primary" style="width:100%" onclick="login()">Sign in</button><p class="muted">Default demo login: admin / cafe123. Change it after signing in.</p>
+    <h2>Admin sign in</h2><div class="field"><label>Admin email</label><input id="loginUser" type="email" autocomplete="username" placeholder="admin@example.com"></div>
+    <div class="field"><label>Password</label><input id="loginPass" type="password" autocomplete="current-password" placeholder="Supabase account password"></div>
+    <button class="primary" style="width:100%" onclick="login()">Sign in</button><p class="muted">Use the admin email and password created in your Supabase dashboard.</p>
     <div id="loginError" class="unavailable"></div>
   </div>
   <div id="adminContent" class="hidden">
-    <div class="notice">This version stores menu data in this browser's LocalStorage. It is suitable for a local demo or one-device setup. Changes will not automatically appear on customers' other phones when hosted on GitHub Pages.</div>
+    <div class="notice success" id="databaseStatus">Connecting to shared Supabase menu database…</div>
     <div class="admin-layout">
       <div>
         <div class="panel">
@@ -67,16 +68,16 @@ main{max-width:1180px;margin:auto;padding:28px 5% 60px}.hero{background:linear-g
           <button class="primary" onclick="saveSettings()">Save cafe details</button>
         </div>
         <div class="panel">
-          <h3>Admin password</h3>
-          <div class="field"><label>Current password</label><input type="password" id="oldPassword"></div>
-          <div class="field"><label>New password</label><input type="password" id="newPassword"></div>
+          <h3>Admin account password</h3>
+          <div class="field"><label>New password</label><input type="password" id="newPassword" minlength="6" placeholder="At least 6 characters"></div>
           <button class="secondary" onclick="changePassword()">Update password</button>
+          <p class="muted">Your password is managed securely by Supabase Authentication.</p>
         </div>
       </div>
       <div>
         <div class="panel"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Menu items</h3><span class="muted" id="adminCount"></span></div><div id="adminItems" style="margin-top:12px"></div></div>
         <div class="panel qr-wrap"><h3>Customer QR code</h3><p class="muted">Customers scan this code with their phone camera to open the menu link.</p><div id="qrArea"><p class="muted">Save or host your website to generate a shareable QR code.</p></div><div class="row" style="justify-content:center;margin-top:15px"><button class="secondary" onclick="downloadQR()">Download QR</button><button class="secondary" onclick="copyMenuLink()">Copy menu link</button></div><p class="muted" id="menuUrl" style="overflow-wrap:anywhere"></p></div>
-        <div class="panel"><h3>Backup and restore</h3><p class="muted">Export your menu as a JSON backup or restore it later in this browser.</p><div class="row"><button class="secondary" onclick="exportData()">Export backup</button><label class="secondary" style="padding:11px 14px;border-radius:12px;font-weight:700;cursor:pointer">Import backup<input type="file" accept="application/json" onchange="importData(event)" hidden></label></div></div>
+        <div class="panel"><h3>Backup and restore</h3><p class="muted">Export a JSON backup or restore menu data to the shared Supabase database.</p><div class="row"><button class="secondary" onclick="exportData()">Export backup</button><label class="secondary" style="padding:11px 14px;border-radius:12px;font-weight:700;cursor:pointer">Import backup<input type="file" accept="application/json" onchange="importData(event)" hidden></label></div></div>
       </div>
     </div>
   </div>
@@ -87,6 +88,12 @@ main{max-width:1180px;margin:auto;padding:28px 5% 60px}.hero{background:linear-g
 <div id="loginModal" class="modal-bg hidden"><div class="modal"><h2>Admin access</h2><p class="muted">Sign in to manage the cafe menu.</p><button class="primary" style="width:100%" onclick="document.getElementById('loginModal').classList.add('hidden');showPage('admin')">Continue to sign in</button></div></div>
 <script>
 const KEY='greenTableCafeMenu_v1';
+// Add your Supabase Project URL and anon/public key here. Never use the service_role key in a website.
+const SUPABASE_URL=https://xawbrodetephymqtleyg.supabase.co;
+const SUPABASE_ANON_KEY=sb_publishable_LDMY3a2X3LCBlfbXM3qhQg_gD3CGCPM;
+const DB_TABLE='cafe_menu';
+const supabaseReady=!!(window.supabase&&SUPABASE_URL.startsWith('https://')&&SUPABASE_ANON_KEY.length>20&&!SUPABASE_URL.includes('YOUR_')&&!SUPABASE_ANON_KEY.includes('YOUR_'));
+const sb=supabaseReady?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
 const defaults=[
 {id:'1',name:'Macchiato',category:'Coffee',description:'Classic Ethiopian espresso with a touch of steamed milk.',price:45,image:'https://images.unsplash.com/photo-1570968915860-54d5c301fa9f?w=700',available:true},
 {id:'2',name:'Cappuccino',category:'Coffee',description:'Rich espresso topped with steamed milk and foam.',price:85,image:'https://images.unsplash.com/photo-1534778101976-62847782c213?w=700',available:true},
@@ -95,14 +102,15 @@ const defaults=[
 {id:'5',name:'Fresh Juice',category:'Drinks',description:'Freshly prepared seasonal fruit juice.',price:95,image:'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=700',available:true},
 {id:'6',name:'Pancakes',category:'Breakfast',description:'Fluffy pancakes served with honey.',price:150,image:'https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=700',available:true}
 ];
-let data=load(),activeCategory='All',loggedIn=false,qrImage='',menuView=localStorage.getItem('cafeMenuView')||'grid',selectedFoodImage='';
-function load(){try{return JSON.parse(localStorage.getItem(KEY))||{foods:defaults,settings:{name:'Green Table Cafe',tagline:'Explore our menu and find your next favourite.'},password:'cafe123'}}catch(e){return {foods:defaults,settings:{name:'Green Table Cafe',tagline:'Explore our menu and find your next favourite.'},password:'cafe123'}}}
-function persist(){localStorage.setItem(KEY,JSON.stringify(data))}
+function localLoad(){try{return JSON.parse(localStorage.getItem(KEY))||{foods:defaults,settings:{name:'Green Table Cafe',tagline:'Explore our menu and find your next favourite.'}}}catch(e){return {foods:defaults,settings:{name:'Green Table Cafe',tagline:'Explore our menu and find your next favourite.'}}}}
+let data=localLoad(),activeCategory='All',loggedIn=false,qrImage='',menuView=localStorage.getItem('cafeMenuView')||'grid',selectedFoodImage='',remoteRowExists=false;
+async function persist(){localStorage.setItem(KEY,JSON.stringify(data));if(!sb||!loggedIn)return;const {error}=await sb.from(DB_TABLE).upsert({id:1,payload:data,updated_at:new Date().toISOString()},{onConflict:'id'});if(error){console.error(error);document.getElementById('databaseStatus').textContent='Could not sync with Supabase: '+error.message;document.getElementById('databaseStatus').classList.remove('success');throw error}document.getElementById('databaseStatus').textContent='Connected — menu changes are saved to Supabase and shared with customers.';document.getElementById('databaseStatus').classList.add('success')}
+async function loadSharedMenu(){if(!sb){document.getElementById('databaseStatus').textContent='Supabase is not configured yet. Add your project URL and anon key in index.html, then publish again.';document.getElementById('databaseStatus').classList.remove('success');renderMenu();return}try{const {data:row,error}=await sb.from(DB_TABLE).select('payload').eq('id',1).maybeSingle();if(error)throw error;if(row&&row.payload){data=row.payload;remoteRowExists=true;localStorage.setItem(KEY,JSON.stringify(data));updateBrand();document.getElementById('databaseStatus').textContent='Connected — showing the live menu shared from Supabase.'}else{document.getElementById('databaseStatus').textContent='Supabase is connected. The admin should sign in once to publish the first menu.'}renderMenu()}catch(e){console.error(e);document.getElementById('databaseStatus').textContent='Supabase connection error: '+e.message;document.getElementById('databaseStatus').classList.remove('success');renderMenu()}}
 function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function showPage(p){document.getElementById('menuPage').classList.toggle('hidden',p!=='menu');document.getElementById('adminPage').classList.toggle('hidden',p!=='admin');document.getElementById('menuTab').classList.toggle('active',p==='menu');document.getElementById('adminTab').classList.toggle('active',p==='admin');if(p==='menu')renderMenu();if(p==='admin'&&loggedIn)renderAdmin()}
 function openAdmin(){showPage('admin');if(!loggedIn){document.getElementById('loginPanel').classList.remove('hidden');document.getElementById('adminContent').classList.add('hidden')}}
-function login(){if(document.getElementById('loginUser').value.trim()==='admin'&&document.getElementById('loginPass').value===data.password){loggedIn=true;document.getElementById('loginPanel').classList.add('hidden');document.getElementById('adminContent').classList.remove('hidden');document.getElementById('logoutBtn').classList.remove('hidden');document.getElementById('loginError').textContent='';renderAdmin()}else document.getElementById('loginError').textContent='Incorrect username or password.'}
-function logout(){loggedIn=false;document.getElementById('adminContent').classList.add('hidden');document.getElementById('loginPanel').classList.remove('hidden');document.getElementById('logoutBtn').classList.add('hidden');document.getElementById('loginPass').value=''}
+async function login(){const email=document.getElementById('loginUser').value.trim(),password=document.getElementById('loginPass').value;if(!sb){document.getElementById('loginError').textContent='Supabase is not configured. Add your project URL and anon key first.';return}if(!email||!password){document.getElementById('loginError').textContent='Enter your admin email and password.';return}const {data:authData,error}=await sb.auth.signInWithPassword({email,password});if(error){document.getElementById('loginError').textContent=error.message;return}loggedIn=true;document.getElementById('loginPanel').classList.add('hidden');document.getElementById('adminContent').classList.remove('hidden');document.getElementById('logoutBtn').classList.remove('hidden');document.getElementById('loginError').textContent='';const {data:row,error:readError}=await sb.from(DB_TABLE).select('payload').eq('id',1).maybeSingle();if(readError){document.getElementById('databaseStatus').textContent='Database read failed: '+readError.message;return}if(row&&row.payload){data=row.payload;remoteRowExists=true}else{remoteRowExists=false;await persist()}updateBrand();renderAdmin();renderMenu();document.getElementById('databaseStatus').textContent='Admin signed in — changes will sync to Supabase.'}
+async function logout(){if(sb)await sb.auth.signOut();loggedIn=false;document.getElementById('adminContent').classList.add('hidden');document.getElementById('loginPanel').classList.remove('hidden');document.getElementById('logoutBtn').classList.add('hidden');document.getElementById('loginPass').value=''}
 function setMenuView(view){menuView=view;localStorage.setItem('cafeMenuView',view);renderMenu()}
 function normalizeCategory(value){return String(value||'').trim().toLowerCase()}
 function renderMenu(){
@@ -151,13 +159,13 @@ function deleteFood(id){if(confirm('Delete this menu item?')){data.foods=data.fo
 function renderAdmin(){document.getElementById('adminCount').textContent=data.foods.length+' items';document.getElementById('adminItems').innerHTML=data.foods.length?data.foods.map(x=>`<div class="item-row"><img src="${safe(x.image||'https://placehold.co/100x100')}" onerror="this.src='https://placehold.co/100x100'"><div class="grow"><strong>${safe(x.name)}</strong><small>${safe(x.category)} · ${Number(x.price).toLocaleString()} ETB · ${x.available?'Available':'Unavailable'}</small></div><button class="secondary" onclick="editFood('${safe(x.id)}')">Edit</button><button class="danger" onclick="deleteFood('${safe(x.id)}')">Delete</button></div>`).join(''):'<p class="muted">No menu items yet. Add your first item.</p>';document.getElementById('cafeNameInput').value=data.settings.name;document.getElementById('taglineInput').value=data.settings.tagline;makeQR()}
 function saveSettings(){data.settings.name=document.getElementById('cafeNameInput').value.trim()||'My Cafe';data.settings.tagline=document.getElementById('taglineInput').value.trim();persist();updateBrand();renderAdmin();alert('Cafe details saved.')}
 function updateBrand(){document.getElementById('brandName').textContent=data.settings.name;document.getElementById('footerName').textContent=data.settings.name;document.getElementById('heroSubtitle').textContent=data.settings.tagline}
-function changePassword(){if(document.getElementById('oldPassword').value!==data.password){alert('Current password is incorrect.');return}const p=document.getElementById('newPassword').value;if(p.length<6){alert('New password must be at least 6 characters.');return}data.password=p;persist();document.getElementById('oldPassword').value='';document.getElementById('newPassword').value='';alert('Password updated successfully.')}
+async function changePassword(){const p=document.getElementById('newPassword').value;if(p.length<6){alert('New password must be at least 6 characters.');return}const {error}=await sb.auth.updateUser({password:p});if(error){alert('Password update failed: '+error.message);return}document.getElementById('newPassword').value='';alert('Supabase admin password updated successfully.')}
 function menuLink(){return location.href.split('#')[0]+'#menu'}
 function makeQR(){const url=menuLink();document.getElementById('menuUrl').textContent=url;if(!/^https?:/.test(url)){document.getElementById('qrArea').innerHTML='<p class="muted">Host this page on GitHub Pages or another website to create a shareable QR code.</p>';return}const src='https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(url);qrImage=src;document.getElementById('qrArea').innerHTML=`<img id="qrImage" src="${src}" alt="Cafe menu QR code">`}
 function downloadQR(){if(!qrImage){alert('Host this website online first to generate the QR code.');return}const a=document.createElement('a');a.href=qrImage;a.download='cafe-menu-qr.png';a.target='_blank';a.click()}
 async function copyMenuLink(){try{await navigator.clipboard.writeText(menuLink());alert('Menu link copied.')}catch(e){prompt('Copy your menu link:',menuLink())}}
 function exportData(){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cafe-menu-backup.json';a.click();URL.revokeObjectURL(a.href)}
-function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.foods)||!d.settings)throw Error();data=d;persist();updateBrand();renderAdmin();renderMenu();alert('Backup imported successfully.')}catch(err){alert('Invalid backup file.')}};r.readAsText(f);e.target.value=''}
-document.getElementById('year').textContent=new Date().getFullYear();updateBrand();renderMenu();if(location.hash==='#menu')showPage('menu');
+function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.foods)||!d.settings)throw Error();data=d;persist().then(()=>{updateBrand();renderAdmin();renderMenu();alert('Backup imported and synced successfully.')}).catch(err=>alert('Import could not sync: '+err.message))}catch(err){alert('Invalid backup file.')}};r.readAsText(f);e.target.value=''}
+document.getElementById('year').textContent=new Date().getFullYear();updateBrand();renderMenu();loadSharedMenu();if(location.hash==='#menu')showPage('menu');
 </script>
 </body></html>
