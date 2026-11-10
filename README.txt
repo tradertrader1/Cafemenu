@@ -26,3 +26,9 @@ The QR code is generated from the hosted website URL using an online QR image se
 
 SECURITY:
 This is a simple browser-only demo admin login, not secure authentication. Do not use it to protect confidential information.
+
+
+Latest update:
+- Fixed category buttons using safe data attributes and delegated click handling. Selecting a category now filters items by normalized category name; All shows every item.
+- Added picture review/editor: upload or load an image URL, preview it, drag to select a crop area, zoom, rotate left/right, reset, and apply the edited image before saving the menu item.
+- No image file-size validation is imposed by the app. Browser LocalStorage still has a practical storage quota, so very large images may exceed the browser's available space.
